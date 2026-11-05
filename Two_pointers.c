@@ -25,49 +25,27 @@ ErrorCode tfe_forward(TextFeatureExtractor *ext, NeuralNetwork *net){
     if (ext->vocab_size <= 0 || ext->X == NULL)
         return TFE_ERR_INVALID_TEXT;
     if (net->W == NULL)
-        return TFE_ERR_OUT_OF_MEMORY;
-    double *a = net->Y;
-    const double *c = net->W; 
-    const double *x = ext->X;
-    const double *b = net->B;
-    
-    for (int i = 0; i < 3; i++){
-        a[i] = b[i];
+        return TFE_ERR_NULL_POINTER;
+    const int out_dim = net->out_dim;
+    for (int i = 0; i < out_dim; i++){
+        net->Y[i] = net->B[i];
     }
     for (int in = 0; in < ext->vocab_size; in++){
-        for (int i = 0; i < 3; i++){
-            a[i] += x[in] * c[in * 3 + i];
+        for (int i = 0; i < out_dim; i++){
+            net->Y[i] += ext->X[in] * net->W[in * out_dim + i];
         }
     }
     return TFE_SUCCESS;
 }
-ErrorCode tfe_network_reset(TextFeatureExtractor *ext, NeuralNetwork *net, double number){
-    if (ext == NULL || ext->vocab_size <= 0 || net == NULL) return TFE_ERR_NULL_POINTER;
-    double *a = net->Y;
-    double *b = net->B;
-    double *c = net->W;
-    const int w_size = net->in_dim * net->out_dim;
-    for (int i = 0; i < 3; i++){
-        a[i] = number;
-        b[i] = number;
-    }
-    for (int i = 0; i < w_size; i++) {
-        c[i] = ((double)rand() / RAND_MAX - 0.5) * 0.02; 
-    }
-    return TFE_SUCCESS;
-}
-
-ErrorCode tfe_backward(TextFeatureExtractor *ext, NeuralNetwork *net, double *Y_true, double lr){
+ErrorCode tfe_backward(TextFeatureExtractor *ext, NeuralNetwork *net, const double *Y_true, double lr){
     if (ext == NULL || net == NULL || Y_true == NULL) return TFE_ERR_NULL_POINTER;
     if (ext->X == NULL || net->W == NULL) return TFE_ERR_NULL_POINTER; 
     const double *y = net->Y;
-    double *w = net->W;
-    const double *x = ext->X;
     const int out_dim = net->out_dim;
     for (int i = 0; i < out_dim; i++) {
-        double err = Y_true[i] - y[i]; 
+        double err = Y_true[i] - net->Y[i];
         for (int in = 0; in < net->in_dim; in++) {
-            w[in * out_dim + i] += lr * err * x[in];
+            net->W[in * out_dim + i] += lr * err * ext->X[in];
         }
         net->B[i] += lr * err;
     }

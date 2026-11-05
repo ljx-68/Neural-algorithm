@@ -26,8 +26,8 @@ typedef struct {
 
 typedef struct 
 {
-    const char *text;
-    double VAD;
+    char *text;
+    double VAD[3];
 }Sample;
 
 typedef struct {
@@ -41,15 +41,23 @@ typedef struct {
 ErrorCode tfe_extractor_init(TextFeatureExtractor *ext,
                              const char **vocab, int vocab_size);
 void      tfe_extractor_free(TextFeatureExtractor *ext);
+
 ErrorCode tfe_network_init(NeuralNetwork *net, int in_dim, int out_dim);
+
 void      tfe_network_free(NeuralNetwork *net);
 
+ErrorCode tfe_sample_init(Sample *s, const char *text, const double *vad);
+
+void      tfe_sample_free(Sample *s);
+
 ErrorCode tfe_extract(TextFeatureExtractor *self, Sample *sample);
+
 ErrorCode tfe_forward(TextFeatureExtractor *ext, NeuralNetwork *net);
-ErrorCode tfe_network_reset(TextFeatureExtractor *ext, NeuralNetwork *net, double number);
+
+ErrorCode tfe_network_reset(NeuralNetwork *net, double number);
+
 ErrorCode tfe_backward(TextFeatureExtractor *ext, NeuralNetwork *net,
                        const double *Y_true, double lr);
-ErrorCode tfe_network_Sample(Sample *net, int Three)
 #ifdef __cpluspleus
 }
 #endif
