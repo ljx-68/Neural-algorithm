@@ -8,7 +8,9 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
+                "-Wall", "-Wextra", "-std=c11",
                 "${file}",
+                "${workspaceFolder}/tfe_core.c",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe"
             ],

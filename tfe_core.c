@@ -1,23 +1,30 @@
 #include "type.h"
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
-ErrorCode tfe_network_init(NeuralNetwork *net, int in_dim, int out_dim)
-{
-    srand((unsigned)time(NULL));
-    if (net == NULL) return TFE_ERR_NULL_POINTER;
-    if (in_dim <= 0 || out_dim <= 0) return TFE_ERR_INVALID_ARG;
-    if (out_dim != 3) return TFE_ERR_INVALID_ARG;
 
-    double *W = (double*)calloc((size_t)in_dim * out_dim, sizeof(double));
+#define TFE_VAD_DIM 3
+
+ErrorCode tfe_network_init(
+    NeuralNetwork *net,
+    int in_dim
+    )
+{
+    if (net == NULL) return TFE_ERR_NULL_POINTER;
+    if (in_dim <= 0) return TFE_ERR_INVALID_ARG;
+    
+    const int out_dim = TFE_VAD_DIM;
+    double *W = (double*)calloc((size_t)in_dim * (size_t)out_dim, sizeof(double));
+
     if (W == NULL) return TFE_ERR_OUT_OF_MEMORY;
 
     for (int i = 0; i < in_dim * out_dim; i++){
         W[i] = ((double)rand() / RAND_MAX - 0.5) * 0.02;
     }
+
     net->W = W;
     net->in_dim = in_dim;
     net->out_dim = out_dim;
+
     memset(net->B, 0, sizeof(net->B));
     memset(net->Y, 0, sizeof(net->Y));
     return TFE_SUCCESS;
@@ -51,13 +58,38 @@ void tfe_sample_free(Sample *s){
     memset(s->VAD, 0, sizeof(s->VAD));
 }
 
-ErrorCode tfe_TextFeatureExtractor_init(TextFeatureExtractor *T, const char **vocad, int vocad_size, double *X){
-    if (T == NULL || vocad == NULL || X == NULL) return TFE_ERR_NULL_POINTER;
+ErrorCode tfe_extractor_init(TextFeatureExtractor *T, const char **vocad, int vocad_size){
+    if (T == NULL || vocad == NULL) return TFE_ERR_NULL_POINTER;
     if (vocad_size <= 0) return TFE_ERR_INVALID_ARG;
-    
+    const char **v = (const char**)malloc(sizeof(const char *) * vocad_size);
+    if (v == NULL)return TFE_ERR_OUT_OF_MEMORY;
+
     for (int i = 0; i < vocad_size; i++){
-        T->vocab[i] = vocad[i];
-        T->X[i] = X[i];
+        if (vocad[i] == NULL){
+            free((void *)v);
+            return TFE_ERR_INVALID_TEXT;
+        }
+        v[i] = vocad[i];
     }
 
+    double *x = (double*)calloc(vocad_size, sizeof(double));
+    if (x == NULL){
+        free((void*)v);
+        return TFE_ERR_OUT_OF_MEMORY;
+    }
+
+    T->vocab = v;
+    T->vocab_size = vocad_size;
+    T->X = x;
+    return TFE_SUCCESS;
+}
+
+void tfe_extractor_free(TextFeatureExtractor *T){
+    if (T == NULL)return;
+    free((void *)T->vocab);
+    free(T->X);
+    
+    T->vocab = NULL;
+    T->vocab_size = 0;
+    T->X = NULL;
 }

@@ -38,11 +38,7 @@ typedef struct {
     int out_dim;     
 } NeuralNetwork;
 
-ErrorCode tfe_extractor_init(TextFeatureExtractor *ext,
-                             const char **vocab, int vocab_size);
-void      tfe_extractor_free(TextFeatureExtractor *ext);
-
-ErrorCode tfe_network_init(NeuralNetwork *net, int in_dim, int out_dim);
+ErrorCode tfe_network_init(NeuralNetwork *net, int out_dim);
 
 void      tfe_network_free(NeuralNetwork *net);
 
@@ -58,6 +54,9 @@ ErrorCode tfe_network_reset(NeuralNetwork *net, double number);
 
 ErrorCode tfe_backward(TextFeatureExtractor *ext, NeuralNetwork *net,
                        const double *Y_true, double lr);
+ErrorCode tfe_extractor_init(TextFeatureExtractor *T, const char **vocad, int vocad_size);
+
+void tfe_extractor_free(TextFeatureExtractor *T);
 #ifdef __cpluspleus
 }
 #endif
